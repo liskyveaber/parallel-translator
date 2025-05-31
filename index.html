@@ -39,6 +39,11 @@
           }
 
           /*noinspection CssUnusedSymbol*/
+          .clear-button {
+            text-shadow: 0 0 0 #C6011F;
+          }
+
+          /*noinspection CssUnusedSymbol*/
           .language-block {
             display: flex;
             flex-direction: column;
@@ -53,7 +58,8 @@
           }
 
           /*noinspection CssUnusedSymbol*/
-          .remove-button {
+          .remove-button,
+          .clear-button {
             align-self: center;
             background: none;
             border: none;
@@ -61,8 +67,12 @@
             cursor: pointer;
             font-size: small;
             height: 50px;
-            text-shadow: 0 0 0 gray;
             width: 50px;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .remove-button {
+            text-shadow: 0 0 0 gray;
           }
 
           #plus-sign {
@@ -71,7 +81,8 @@
           }
 
           /*noinspection CssUnusedSymbol*/
-          .remove-button:hover {
+          .remove-button:hover,
+          .clear-button:hover {
             opacity: 50%;
           }
 
@@ -84,6 +95,7 @@
             border-top-color: #333000;
             display: flex;
             height: 12px;
+            margin-left: 12px;
             width: 12px;
           }
 
@@ -182,10 +194,21 @@
               textarea.addEventListener('input', delayFunction(handleInput, 1000));
               textarea.addEventListener('input', cleanAllLanguageBlocksOnBlankInput);
 
+              const clearButton = document.createElement('button');
+
+              clearButton.className = 'clear-button';
+              clearButton.title = 'Clear text';
+              clearButton.innerHTML = '❌';
+              clearButton.onclick = () => {
+                textarea.value = '';
+                textarea.dispatchEvent(new Event('input'));
+              };
+
               const removeButton = document.createElement('button');
 
               removeButton.className = 'remove-button';
-              removeButton.innerHTML = '❌';
+              clearButton.title = 'Remove language';
+              removeButton.innerHTML = '➖';
               removeButton.onclick = () => {
                 languageBlock.remove();
 
@@ -201,6 +224,7 @@
               languageRowBlock.className = 'language-row-block';
 
               languageRowBlock.appendChild(textarea);
+              languageRowBlock.appendChild(clearButton);
               languageRowBlock.appendChild(removeButton);
 
               languageBlock.append(labelBlock, languageRowBlock);
