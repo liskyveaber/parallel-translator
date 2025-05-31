@@ -163,7 +163,7 @@
               textarea.addEventListener('keyup', () => resizeTextArea(textarea));
 
               // wait 600ms to check if user stopped typing
-              textarea.addEventListener('input', delayFunction(handleInput, 600));
+              textarea.addEventListener('input', delayFunction(handleInput, 1000));
 
               const removeButton = document.createElement('button');
 
