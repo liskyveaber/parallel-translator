@@ -5,8 +5,303 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
         <title>Паралельний перекладач</title>
         <link rel="icon" sizes="256x256" href="favicon-256x256.png">
+        <style>
+          body {
+            font-family: sans-serif;
+            margin: 24px;
+          }
+
+          button {
+            padding: 0.25rem;
+          }
+
+          h2 {
+            margin-bottom: 12px;
+          }
+
+          h5 {
+            font-size: 16px;
+            font-weight: 100;
+            margin-bottom: 8px;
+            margin-top: 0;
+          }
+
+          textarea {
+            overflow: hidden;
+            resize: none;
+            width: 80%;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .language-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .language-row-block {
+            display: flex;
+            flex-direction: row;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .remove-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            height: 50px;
+            width: 50px;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .remove-button:hover {
+            opacity: 50%;
+          }
+
+          /*noinspection CssUnusedSymbol*/
+          .spinner {
+            align-self: center;
+            animation: spin 1s linear infinite;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            border-top-color: #333000;
+            display: flex;
+            height: 16px;
+            width: 16px;
+          }
+
+          #add-lang {
+            margin-bottom: 1rem;
+            margin-top: 0.5rem;
+          }
+
+          #lang-select {
+            display: flex;
+            margin-bottom: 1rem;
+            gap: 1rem;
+          }
+
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        </style>
     </head>
     <body>
+        <h2>Паралельний перекладач</h2>
+        <h5>v1.0.0</h5>
+        <h5>Developed by <a href="https://bsky.app/profile/liskyveaber.bsky.social"
+                            target="_blank">@liskyveaber.bsky.social</a>. All rights not reserved</h5>
+        <button id="add-lang" onclick="displayLanguagePicker()">➕ Додати мову</button>
+        <div id="lang-select" style="display:none"></div>
+        <div id="translators-block"></div>
 
+        <script>
+          /**
+           * Global constants
+           */
+          const supportedLanguages = {
+            de: 'Deutsch',
+            en: 'English',
+            es: 'Español',
+            fr: 'Français',
+            it: 'Italiano',
+            pt: 'Português',
+            ro: 'Română',
+            uk: 'Українська'
+          };
+
+          /**
+           * Actions on page load
+           */
+          createLanguagePicker();
+          getUserLanguagesFromLocalStorage().forEach(addLanguage);
+
+          /**
+           * Functions
+           */
+          function addLanguage(code) {
+            const existingNodes = document.querySelectorAll('.language-block');
+            const existingLanguages = [...existingNodes].map(element => element.dataset.language);
+
+            if (!existingLanguages.includes(code)) {
+              const languageBlock = document.createElement('div');
+
+              languageBlock.className = 'language-block';
+              languageBlock.dataset.language = code;
+
+              const label = document.createElement('label');
+
+              label.textContent = supportedLanguages[code];
+
+              const labelBlock = document.createElement('div');
+
+              labelBlock.appendChild(label);
+
+              const textarea = document.createElement('textarea');
+
+              textarea.rows = 3;
+              textarea.dataset.language = code;
+
+              textarea.addEventListener('change', () => resizeTextArea(textarea));
+              textarea.addEventListener('keyup', () => resizeTextArea(textarea));
+
+              // wait 600ms to check if user stopped typing
+              textarea.addEventListener('input', delayFunction(handleInput, 600));
+
+              const removeButton = document.createElement('button');
+
+              removeButton.className = 'remove-button';
+              removeButton.innerHTML = '❌';
+              removeButton.onclick = () => {
+                languageBlock.remove();
+
+                const userLanguages = getUserLanguagesFromLocalStorage().filter(language => language !== code);
+
+                saveUserLanguagesToLocalStorage(userLanguages);
+              };
+
+              const languageRowBlock = document.createElement('div');
+
+              languageRowBlock.className = 'language-row-block';
+
+              languageRowBlock.appendChild(textarea);
+              languageRowBlock.appendChild(removeButton);
+
+              languageBlock.append(labelBlock, languageRowBlock);
+
+              const translatorsBlockDiv = document.getElementById('translators-block');
+
+              translatorsBlockDiv.appendChild(languageBlock);
+
+              const userLanguages = getUserLanguagesFromLocalStorage();
+
+              if (!userLanguages.includes(code)) {
+                userLanguages.push(code);
+
+                saveUserLanguagesToLocalStorage(userLanguages);
+              }
+            }
+          }
+
+          function createLanguagePicker() {
+            const languagePickerDiv = document.getElementById('lang-select');
+
+            languagePickerDiv.innerHTML = '';
+
+            Object
+            .entries(supportedLanguages)
+            .forEach(([code, name]) => {
+              const button = document.createElement('button');
+
+              button.textContent = name;
+              button.onclick = () => {
+                addLanguage(code);
+
+                languagePickerDiv.style.display = 'none';
+              };
+
+              languagePickerDiv.appendChild(button);
+            });
+          }
+
+          function delayFunction(functionToDelay, timeoutMilliseconds) {
+            let timer;
+
+            return function (...args) {
+              clearTimeout(timer);
+
+              timer = setTimeout(() => functionToDelay.apply(this, args), timeoutMilliseconds);
+            };
+          }
+
+          function displayLanguagePicker() {
+            const languagePickerBlock = document.getElementById('lang-select');
+
+            languagePickerBlock.style.display = languagePickerBlock.style.display === 'none' ? 'flex' : 'none';
+          }
+
+          function fetchWithRetry(url, numberOfRetries, delayMilliseconds = 1000) {
+            return fetch(url)
+            .catch(async function (error) {
+              if (numberOfRetries === 0) {
+                throw error;
+              } else {
+                await wait(delayMilliseconds);
+
+                return fetchWithRetry(url, numberOfRetries - 1, delayMilliseconds + 1000);
+              }
+            });
+          }
+
+          function getUserLanguagesFromLocalStorage() {
+            return JSON.parse(localStorage.getItem('selectedLanguages') || '[]');
+          }
+
+          function handleInput(event) {
+            const inputLanguage = event.target.dataset.language;
+            const text = event.target.value;
+            const languageBlocks = document.querySelectorAll('.language-block');
+
+            languageBlocks.forEach(languageBlock => {
+              const targetLanguage = languageBlock.dataset.language;
+              const textarea = languageBlock.querySelector('textarea');
+
+              if (textarea !== event.target) {
+                showSpinner(languageBlock.lastElementChild);
+
+                const url = `https://lingva.ml/api/v1/${inputLanguage}/${targetLanguage}/${encodeURIComponent(text)}`;
+
+                translateWithRetry(url, textarea, languageBlock);
+              }
+            });
+          }
+
+          function removeSpinner(block) {
+            const spinner = block.querySelector('.spinner');
+
+            if (spinner) {
+              spinner.remove();
+            }
+          }
+
+          function resizeTextArea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+          }
+
+          function saveUserLanguagesToLocalStorage(languages) {
+            localStorage.setItem('selectedLanguages', JSON.stringify(languages));
+          }
+
+          function showSpinner(block) {
+            removeSpinner(block);
+
+            const spinner = document.createElement('div');
+
+            spinner.className = 'spinner';
+
+            block.appendChild(spinner);
+          }
+
+          function translateWithRetry(url, textarea, languageBlock) {
+            return fetchWithRetry(url, 10)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data['translation']) {
+                textarea.value = data['translation'];
+              }
+            })
+            .finally(() => removeSpinner(languageBlock.lastElementChild));
+          }
+
+          function wait(delayMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, delayMilliseconds));
+          }
+        </script>
     </body>
 </html>
