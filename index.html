@@ -28,6 +28,7 @@
 
           textarea {
             overflow: hidden;
+            padding: 4px;
             resize: none;
             width: 80%;
           }
@@ -48,10 +49,11 @@
 
           /*noinspection CssUnusedSymbol*/
           .remove-button {
+            align-self: center;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: small;
             height: 50px;
             width: 50px;
           }
@@ -69,8 +71,8 @@
             border-radius: 50%;
             border-top-color: #333000;
             display: flex;
-            height: 16px;
-            width: 16px;
+            height: 12px;
+            width: 12px;
           }
 
           #add-lang {
@@ -160,6 +162,8 @@
               removeButton.onclick = () => {
                 languageBlock.remove();
 
+                enableAddLanguageBlockIfNeeded();
+
                 const userLanguages = getUserLanguagesFromLocalStorage().filter(language => language !== code);
 
                 saveUserLanguagesToLocalStorage(userLanguages);
@@ -185,6 +189,8 @@
 
                 saveUserLanguagesToLocalStorage(userLanguages);
               }
+
+              disableAddLanguageButtonIfNeeded();
             }
           }
 
@@ -219,10 +225,22 @@
             };
           }
 
+          function disableAddLanguageButtonIfNeeded() {
+            if (document.querySelectorAll('.language-block').length >= 5) {
+              document.getElementById('add-lang').disabled = true;
+            }
+          }
+
           function displayLanguagePicker() {
             const languagePickerBlock = document.getElementById('lang-select');
 
             languagePickerBlock.style.display = languagePickerBlock.style.display === 'none' ? 'flex' : 'none';
+          }
+
+          function enableAddLanguageBlockIfNeeded() {
+            if (document.querySelectorAll('.language-block').length < 5) {
+              document.getElementById('add-lang').disabled = false;
+            }
           }
 
           function fetchWithRetry(url, numberOfRetries, delayMilliseconds = 1000) {
