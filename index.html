@@ -52,10 +52,17 @@
             align-self: center;
             background: none;
             border: none;
+            color: transparent;
             cursor: pointer;
             font-size: small;
             height: 50px;
+            text-shadow: 0 0 0 gray;
             width: 50px;
+          }
+
+          #plus-sign {
+            color: transparent;
+            text-shadow: 0 0 0 gray;
           }
 
           /*noinspection CssUnusedSymbol*/
@@ -98,7 +105,10 @@
         <h5>v1.0.0</h5>
         <h5>Developed by <a href="https://bsky.app/profile/liskyveaber.bsky.social"
                             target="_blank">@liskyveaber.bsky.social</a>. All rights not reserved</h5>
-        <button id="add-lang" onclick="displayLanguagePicker()">➕ Додати мову</button>
+        <button id="add-lang" onclick="displayLanguagePicker()">
+            <span id="plus-sign">➕</span>
+            Додати мову
+        </button>
         <div id="lang-select" style="display:none"></div>
         <div id="translators-block"></div>
 
