@@ -11,7 +11,8 @@
             margin: 24px;
           }
 
-          button {
+          button,
+          select {
             padding: 0.25rem;
           }
 
@@ -206,24 +207,37 @@
           }
 
           function createLanguagePicker() {
-            const languagePickerDiv = document.getElementById('lang-select');
+            const languagePickerBlock = document.getElementById('lang-select');
 
-            languagePickerDiv.innerHTML = '';
+            languagePickerBlock.innerHTML = '';
 
-            Object
-            .entries(supportedLanguages)
-            .forEach(([code, name]) => {
-              const button = document.createElement('button');
+            const select = document.createElement('select');
+            const defaultOption = document.createElement('option');
 
-              button.textContent = name;
-              button.onclick = () => {
-                addLanguage(code);
+            defaultOption.textContent = 'Оберіть мову...';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
 
-                languagePickerDiv.style.display = 'none';
-              };
+            select.appendChild(defaultOption);
 
-              languagePickerDiv.appendChild(button);
+            Object.entries(supportedLanguages).forEach(([code, name]) => {
+              const option = document.createElement('option');
+
+              option.value = code;
+              option.textContent = name;
+
+              select.appendChild(option);
             });
+
+            select.onchange = () => {
+              addLanguage(select.value);
+
+              defaultOption.selected = true;
+
+              languagePickerBlock.style.display = 'none';
+            };
+
+            languagePickerBlock.appendChild(select);
           }
 
           function delayFunction(functionToDelay, timeoutMilliseconds) {
