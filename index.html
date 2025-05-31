@@ -164,6 +164,7 @@
 
               // wait 600ms to check if user stopped typing
               textarea.addEventListener('input', delayFunction(handleInput, 1000));
+              textarea.addEventListener('input', cleanAllLanguageBlocksOnBlankInput);
 
               const removeButton = document.createElement('button');
 
@@ -273,20 +274,39 @@
           function handleInput(event) {
             const inputLanguage = event.target.dataset.language;
             const text = event.target.value;
-            const languageBlocks = document.querySelectorAll('.language-block');
 
-            languageBlocks.forEach(languageBlock => {
-              const targetLanguage = languageBlock.dataset.language;
-              const textarea = languageBlock.querySelector('textarea');
+            if (text && text.trim()) {
+              const languageBlocks = document.querySelectorAll('.language-block');
 
-              if (textarea !== event.target) {
-                showSpinner(languageBlock.lastElementChild);
+              languageBlocks.forEach(languageBlock => {
+                const targetLanguage = languageBlock.dataset.language;
+                const textarea = languageBlock.querySelector('textarea');
 
-                const url = `https://lingva.ml/api/v1/${inputLanguage}/${targetLanguage}/${encodeURIComponent(text)}`;
+                if (textarea !== event.target) {
+                  showSpinner(languageBlock.lastElementChild);
 
-                translateWithRetry(url, textarea, languageBlock);
-              }
-            });
+                  const url = `https://lingva.ml/api/v1/${inputLanguage}/${targetLanguage}/${encodeURIComponent(text)}`;
+
+                  translateWithRetry(url, textarea, languageBlock);
+                }
+              });
+            }
+          }
+
+          function cleanAllLanguageBlocksOnBlankInput(event) {
+            const text = event.target.value;
+
+            if (!text || !text.trim()) {
+              document
+              .querySelectorAll('.language-block')
+              .forEach(languageBlock => {
+                const textarea = languageBlock.querySelector('textarea');
+
+                if (textarea) {
+                  textarea.value = '';
+                }
+              });
+            }
           }
 
           function removeSpinner(block) {
